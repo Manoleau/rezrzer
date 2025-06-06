@@ -1,8 +1,7 @@
-import * as userService from '../services/user.service.js';
+import { User } from '../models/user.model.js';
 
-// Middleware to check if required fields are in the request body
 export const checkBody = (req, res, next) => {
-  const requiredFields = ['name', 'email', 'password', 'role'];
+  const requiredFields = ['name', 'email', 'password'];
   const missingFields = requiredFields.filter(field => !req.body[field]);
 
   if (missingFields.length > 0) {
@@ -14,101 +13,121 @@ export const checkBody = (req, res, next) => {
   next();
 };
 
-export const getAllUsers = (req, res) => {
-  const users = userService.getAllUsers();
-  res.status(200).json({
-    status: "success",
-    results: users.length,
-    data: { users }
-  });
-};
-
-export const getUserById = (req, res) => {
-  const id = req.params.id;
-  const user = userService.getUserById(id);
-
-  if (!user) {
-    return res.status(404).json({
-      status: 'fail',
-      message: `User with ID ${id} not found`
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find();
+    res.status(200).json({
+      status: "success",
+      results: users.length,
+      data: { users }
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: "fail",
+      message: err.message
     });
   }
+};
 
-  res.status(200).json({
-    status: 'success',
-    data: {
-      user
+export const getUserById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        status: 'fail',
+        message: `User with ID ${req.params.id} not found`
+      });
     }
-  });
-};
 
-export const createUser = (req, res) => {
-  userService.createUser(req.body)
-    .then(newUser => {
-      res.status(201).json({
-        status: 'success',
-        data: {
-          user: newUser
-        }
-      });
-    })
-    .catch(err => {
-      res.status(500).json({
-        status: 'error',
-        message: 'Error writing to file'
-      });
-    });
-};
-
-export const updateUser = (req, res) => {
-  const id = req.params.id;
-  
-  userService.updateUser(id, req.body)
-    .then(updatedUser => {
-      if (!updatedUser) {
-        return res.status(404).json({
-          status: 'fail',
-          message: `User with ID ${id} not found`
-        });
+    res.status(200).json({
+      status: 'success',
+      data: {
+        user
       }
-
-      res.status(200).json({
-        status: 'success',
-        data: {
-          user: updatedUser
-        }
-      });
-    })
-    .catch(err => {
-      res.status(500).json({
-        status: 'error',
-        message: 'Error writing to file'
-      });
     });
+  } catch (err) {
+    res.status(404).json({
+      status: 'fail',
+      message: err.message
+    });
+  }
 };
 
-export const deleteUser = (req, res) => {
-  const id = req.params.id;
-  
-  userService.deleteUser(id)
-    .then(success => {
-      if (!success) {
-        return res.status(404).json({
-          status: 'fail',
-          message: `User with ID ${id} not found`
-        });
-      }
+export const createUser = async (req, res) => {
+  try {
+    const newUser = await User.create(req.body);
 
-      // Return 204 No Content
-      res.status(204).json({
-        status: 'success',
-        data: null
-      });
-    })
-    .catch(err => {
-      res.status(500).json({
-        status: 'error',
-        message: 'Error writing to file'
-      });
+    newUser.password = undefined;
+
+    res.status(201).json({
+      status: 'success',
+      data: {
+        user: newUser
+      }
     });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err.message
+    });
+  }
+};
+
+export const updateUser = async (req, res) => {
+  try {
+    if (req.body.password) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'This route is not for password updates. Please use /updateMyPassword.'
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        status: 'fail',
+        message: `User with ID ${req.params.id} not found`
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        user
+      }
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err.message
+    });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        status: 'fail',
+        message: `User with ID ${req.params.id} not found`
+      });
+    }
+
+    res.status(204).json({
+      status: 'success',
+      data: null
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err.message
+    });
+  }
 };

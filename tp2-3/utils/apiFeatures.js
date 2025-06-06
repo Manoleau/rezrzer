@@ -9,7 +9,6 @@ class APIfeatures {
         const excludedFields = ['page', 'sort', 'limit', 'fields'];
         excludedFields.forEach(el => delete queryObj[el]);
         
-        // Advanced filtering for gte/gt/lte/lt
         let queryStr = JSON.stringify(queryObj);
         queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
 
@@ -23,7 +22,6 @@ class APIfeatures {
             const sortBy = this.queryString.sort.split(',').join(' ');
             this.query = this.query.sort(sortBy);
         } else {
-            // sort by default
             this.query = this.query.sort('-createdAt');
         }
         return this;

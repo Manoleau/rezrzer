@@ -1,7 +1,6 @@
 import { Tour } from '../models/tour.model.js';
 import APIfeatures from '../utils/apiFeatures.js';
 
-// Middleware to check if required fields are in the request body
 export const checkBody = (req, res, next) => {
   const requiredFields = ['name', 'duration', 'maxGroupSize', 'difficulty', 'price'];
   const missingFields = requiredFields.filter(field => !req.body[field]);
@@ -24,7 +23,6 @@ export const aliasTopTours = (req, res, next) => {
 
 export const getAllTours = async (req, res) => {
   try {
-    // Execute query
     const features = new APIfeatures(Tour.find(), req.query)
       .filter()
       .sort()
@@ -33,7 +31,6 @@ export const getAllTours = async (req, res) => {
 
     const tours = await features.query;
 
-    // Send response
     res.status(200).json({
       status: "success",
       results: tours.length,

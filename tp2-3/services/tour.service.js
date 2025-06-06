@@ -6,7 +6,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const dataPath = path.join(__dirname, '..', 'dev-data', 'data', 'tours-simple.json');
 
-// Read tours data from file
 const tours = JSON.parse(fs.readFileSync(dataPath));
 
 export const getAllTours = () => {
@@ -18,16 +17,12 @@ export const getTourById = (id) => {
 };
 
 export const createTour = (tourData) => {
-  // Generate new ID (max existing ID + 1)
   const newId = tours.length > 0 ? Math.max(...tours.map(tour => tour.id)) + 1 : 0;
 
-  // Create new tour object by combining the request body with the new ID
   const newTour = { id: newId, ...tourData };
 
-  // Add new tour to tours array
   tours.push(newTour);
 
-  // Write updated tours array back to file
   return new Promise((resolve, reject) => {
     fs.writeFile(
       dataPath, 
@@ -50,11 +45,9 @@ export const updateTour = (id, tourData) => {
     return null;
   }
 
-  // Update tour with new data, preserving the ID
   const updatedTour = { ...tours[tourIndex], ...tourData, id };
   tours[tourIndex] = updatedTour;
 
-  // Write updated tours array back to file
   return new Promise((resolve, reject) => {
     fs.writeFile(
       dataPath, 
@@ -77,10 +70,8 @@ export const deleteTour = (id) => {
     return null;
   }
 
-  // Remove tour from array
   tours.splice(tourIndex, 1);
 
-  // Write updated tours array back to file
   return new Promise((resolve, reject) => {
     fs.writeFile(
       dataPath, 
